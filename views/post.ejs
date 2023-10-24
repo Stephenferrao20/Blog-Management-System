@@ -1,0 +1,166 @@
+<%- include('./layouts/header2.ejs') %>
+
+<!-- Page content-->
+<div class="container mt-5">
+  <div class="row">
+    <div class="col-lg-8">
+      <!-- Post content-->
+      <article>
+        <!-- Post header-->
+        <header class="mb-4">
+          <!-- Post title-->
+          <h1 class="fw-bolder mb-1"><%= post.title %></h1>
+          <!-- Post meta content-->
+          <div class="text-muted fst-italic mb-2">Posted by Admin</div>
+          <!-- Post categories-->
+          <!-- <a class="badge bg-secondary text-decoration-none link-light" href="#!">Web Design</a>
+                            <a class="badge bg-secondary text-decoration-none link-light" href="#!">Freebies</a> -->
+        </header>
+        <!-- Preview image figure-->
+        <figure class="mb-4">
+          <%
+          if(post.image !== "undefined" && post.image !== ""){
+           %>
+           <img src="<%= post.image %>" alt="" class="card-img-top" />
+           <%
+          }else{
+           %>
+           <img src="https://dummyimage.com/300x200/c2c2c2/ffffff&text=No+Image" alt="" class="card-img-top" />
+           <%
+          } 
+        %>
+         
+        
+        </figure>
+        <!-- Post content-->
+        <section class="mb-5">
+          <p class="fs-5 mb-4"><%- post.content %></p>
+        </section>
+      </article>
+
+
+      <!-- Comments section-->
+      <section class="mb-5">
+        <div class="card bg-light">
+          <div class="card-body">
+            <!-- Comment form-->
+            <h5>Leave a Comment</h5>
+            <form class="mb-4" id="comment-form">
+              <input type="hidden" name="post_id" value="<%= post._id %>" />
+           
+             
+
+              <input
+                type="text"
+                placeholder="Enter your Name"
+                required
+                class="form-control mb-3"
+                name="username"
+              />
+              <textarea
+                class="form-control"
+                rows="3"
+                placeholder="Join the discussion and leave a comment!"
+                name="comment"
+                required
+              ></textarea>
+              <input
+                type="submit"
+                value="Submit"
+                class="btn btn-primary mt-3"
+              />
+            </form>
+
+            <p class="com-status" style="color: green"></p>
+
+            <!-- Single comment-->
+           <div id="comment-section ">
+            <%
+               if(post.comments.length >= 0){
+                post.comments = post.comments.reverse();
+             post.comments.forEach(function(comment){ %>
+            <div class="d-flex mt-3 ">
+              <div class="flex-shrink-0 ">
+                
+                <img
+                  class="rounded-circle"
+                  src="https://dummyimage.com/50x50/ced4da/6c757d.jpg"
+                  alt="..."
+                />
+              </div>
+              <div class="ms-3">
+                <div class="fw-bold"><%= comment.username %></div>
+                <%= comment.comment %>
+              </div>
+            </div>
+            <% });
+         } %>
+        </div>
+          </div>
+        </div>
+      </section>
+    </div>
+    <!-- Side widgets-->
+    
+  </div>
+</div>
+
+<script>
+  var socket = io();
+  $(document).ready(function () {
+    $("#comment-form").submit(function (event) {
+      event.preventDefault();
+
+      var formData = {};
+      $.each($(this).serializeArray() , function(i , field){
+        formData[field.name] = field.value;
+      });
+
+
+      $.ajax({
+        url: "/add-comment",
+        type: "POST",
+        data: formData,
+        success: function (data) {
+
+          formData._id = data._id;
+          socket.emit("new_comment" , formData);
+
+          $(".com-status").text(data.msg);
+          setTimeout(function () {
+            $(".com-status").text("");
+          }, 5000);
+        },
+      });
+    });
+
+    //realtime comment show
+    socket.on("new_comment" , function(comment){
+
+      var html = '';
+
+      html +=`
+      <div class="d-flex mt-3">
+              <div class="flex-shrink-0">
+                
+                <img
+                  class="rounded-circle"
+                  src="https://dummyimage.com/50x50/ced4da/6c757d.jpg"
+                  alt="..."
+                />
+              </div>
+              <div class="ms-3">
+                <div class="fw-bold">`+comment.username+`</div>
+                `+comment.comment+`
+              </div>
+            </div>
+      `;
+
+      $('#comment-section').prepend(html);
+    });
+
+
+  });
+</script>
+
+

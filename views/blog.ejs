@@ -1,0 +1,191 @@
+<%- include('./layouts/header.ejs') %>
+
+    <div class="container posts ">
+      <div class="row g-3 mt-3 mb-5" >
+
+        <!-- content section -->
+
+        <%
+        if(posts.length > 0){
+
+            for(let i = posts.length-1; i >= 0 ; i--){
+
+              %>
+          <div class="col-12 col-md-6 col-lg-4" id="post-<%= posts[i]._id %>">
+            <div class="card shadow p-3 mb-5 bg-white rounded">
+              <%
+                 if(posts[i].image !== undefined && posts[i].image !== ""){
+                  %>
+                  <img src="<%= posts[i].image %>" alt="" class="card-img-top" />
+                  <%
+                 }else{
+                  %>
+                  <img src="https://dummyimage.com/300x200/c2c2c2/ffffff&text=No+Image" alt="" class="card-img-top" />
+                  <%
+                 } 
+               %>
+              
+              <div class="card-body">
+                <h5 class="card-title"><%= posts[i].title %></h5>
+                <p class="card-text"><%= (posts[i].content.substring(0 , 50) + "....") %></p>
+                
+                <a href="/post/<%= posts[i]._id %>" class="btn btn-primary stretched-link"
+                  >Read</a
+                >
+              </div>
+            </div>
+          </div>
+          <%
+            }
+          
+        }
+        else{
+          %>
+          <h1>Posts not Available!</h1>
+          <%
+        }
+        %>
+
+        
+      </div>
+    </div>
+   <div class="container mb-3">
+      <div class="text-center">
+        <button class="btn btn-primary mr-3" onclick="getPrevious()">Previous</button>
+        
+        <button class="btn btn-primary" onclick="getNext()">Next</button>
+      </div>
+   </div>
+
+
+    <script>
+
+      var start = 0;
+      var limit = <%= postLimit %>
+    
+
+      function getNext(){
+        start = start + limit;
+        $.ajax({
+          url:"/get-posts/"+start+"/"+limit,
+          type:"GET",
+          success:function(response){
+            renderPost(response);
+          }
+        })
+      }
+
+
+      function getPrevious(){
+        start = start - limit;
+        $.ajax({
+          url:"/get-posts/"+start+"/"+limit,
+          type:"GET",
+          success:function(response){
+            renderPost(response);
+          }
+        })
+      }
+
+
+      function renderPost(posts){
+
+        if(posts.length > 0 ){
+
+
+          var html ='';
+
+          for(let i = 0 ; i < posts.length ; i++){
+
+            var image = '';
+
+            if(posts[i].image !== undefined && posts[i].image !== ""){
+                 
+                 image = `<img src="`+ posts[i].image +`" alt="" class="card-img-top" />`
+                 
+                }else{
+                 
+                 image = `<img src="`+ posts[i].image +`" alt="" class="card-img-top" />`
+                 
+                } 
+             
+
+            html +=`
+            <div class="col-12 col-md-6 col-lg-4" id="post-`+ posts[i]._id +`">
+            <div class="card shadow p-3 mb-5 bg-white rounded">
+              
+              `+image+`
+              <div class="card-body">
+                <h5 class="card-title">`+ posts[i].title +`</h5>
+                <!-- <p class="card-text">
+                  
+                   
+                    `+ posts[i].content +`
+                    
+                  
+                   
+                 
+                </p> -->
+                <a href="/post/`+ posts[i]._id +`" class="btn btn-primary stretched-link"
+                  >Read </a
+                >
+              </div>
+            </div>
+          </div>
+             `;
+          }
+          $('.posts').html(html);
+        }
+      }
+
+      var socket = io();
+
+      socket.on("delete_post" ,function(postId){
+        document.getElementById("post-"+postId).remove();
+      });
+
+
+
+      socket.on("new_post",function(formData){
+        // console.log(formData);
+        var html = "";
+        var image = "https://dummyimage.com/900x400/bebfcc/fff.jpg";
+        if (formData.image != '') {
+          image = formData.image;
+        }
+        html += `
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card">
+              
+                  
+                  <img src="` +image+ `" alt="" class="card-img-top" />
+                  
+               
+            
+                  
+               
+              
+              <div class="card-body">
+                <h5 class="card-title">`+formData.title+`</h5>
+                 <p class="card-text">
+                  
+                   
+                    `+formData.content+`
+                    
+                  
+                   
+                 
+                </p> 
+                <a href="/post/`+formData._id+`" class="btn btn-primary stretched-link"
+                  >Read More</a
+                >
+              </div>
+            </div>
+          </div>
+        `;
+
+        $('.posts').prepend(html);
+      })
+    </script>
+
+    <%- include('./layouts/footer.ejs') %>

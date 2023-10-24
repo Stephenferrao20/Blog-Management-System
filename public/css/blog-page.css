@@ -1,0 +1,17 @@
+.main-article-title{
+    font-size: 2em;
+    font-weight: bold;
+}
+
+.main-article-category{
+    color: rgba(0, 0, 0, 0.4);
+}
+
+.main-article-category:hover{
+    text-decoration: underline;
+}
+
+footer{
+    color: #ffffff;
+    background-color: #343a40;
+}
